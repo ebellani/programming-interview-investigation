@@ -5,9 +5,12 @@
 #+latex_class: article
 #+latex_class_options: [12pt]
 
+# This source block is used to generate the test tables that are
+# present throughout this document
+
 #+NAME: generic-tester
 #+BEGIN_SRC emacs-lisp :var result="" :var expected="" :exports none
-  (if (equal expected result) "pass" (format "it was %S" result))
+  (if (equal expected result) "pass" (format "expected %S, found %S" expected result))
 #+END_SRC
 
 #+include: "./intro.org"
@@ -88,7 +91,7 @@
 
 **** Implementations
 
-     #+CAPTION: Python solution \cite{Komanec:2016:Codility:Gist}
+     #+CAPTION: Python solution \cite{Komanec:201602:Codility:Gist}
      #+NAME: asymmetry-solution-python
      #+BEGIN_SRC python
        def solution(anchor, list_of_elements):
@@ -234,7 +237,7 @@
 
         1 / -2 =  0, remainder 1
 
-        Therefore, the negabinary expansion of 13 is 11101. \cite{FactIndex:2016:Negabinary}
+        Therefore, the negabinary expansion of 13 is 11101. \cite{FactIndex:201602:Negabinary}
         #+END_QUOTE
 
         One must keep in mind, while doing this process, that
@@ -257,7 +260,7 @@
 
 **** Implementations
 
-     #+CAPTION: Python solution \cite{Komanec:2016:Codility:Gist}
+     #+CAPTION: Python solution \cite{Komanec:201602:Codility:Gist}
      #+NAME: negabinary-solution-python
      #+BEGIN_SRC python
        def to_binary(n):
@@ -308,11 +311,12 @@
 
      #+NAME: negabinary-solution-js :exports none
      #+BEGIN_SRC js :noweb yes
+           <<to-decimal-js>>
+
        Math.trunc = Math.trunc || function(x) {
-         return x < 0 ? Math.ceil(x) : Math.floor(x);
+           return x < 0 ? Math.ceil(x) : Math.floor(x);
        }
 
-       <<to-decimal-js>>
 
        function toNegaBase(number, base){
            var nega_num_array = []
@@ -357,6 +361,171 @@
      #+LATEX: }
      #+END_TABLE
 
-\bibliographystyle{plainnat}
+*** Knight's distance
 
+    The knight is a piece in the game of chess that in one turn can move
+    two squares horizontally and one square vertically or two squares
+    vertically and one square horizontally.
+
+    An infinite chessboard is given. All of its squares are empty except
+    for the square with coordinates (0, 0) where a knight stands.
+
+    Write a function: int solution(A,B)
+
+    that given two numbers A and B returns the minimal number of turns
+    required for the knight to move from square (0, 0) to square (A,
+    B). The function should return -1 if the knight cannot reach given
+    square. The function should return −2 if the required number of turns
+    exceeds 100,000,000.
+
+    Assume that: A is an integer within the range
+      - [-100,000,000..100,000,000]; B is an integer within the range
+      - [-100,000,000..100,000,000].
+
+    For example, given A = 4 and B = 5 the function should return 3
+    because the knight requires 3 turns to move from square (0, 0) to
+    square (4, 5): in the first turn the knight moves from square (0, 0)
+    to square (2, 1), in the second turn the knight moves from square
+    (2, 1) to square (3, 3), in the third turn the knight moves from
+    square (3, 3) to square (4, 5).
+
+    Complexity:
+      - expected worst-case time complexity is O(1);
+      - expected worst-case space complexity is O(1).
+
+**** Design
+
+     The main thing about this problem is the expected time complexity
+     of O(1). This informs the reader that there is a structural
+     relationship that can be exploited in the form of a formula. So
+     the solver must dig deeper than the usual regular search methods
+     (BFS and DFS).
+
+     #+BEGIN_QUOTE
+     This problem is called the "Knight's distance" ... was posed as part
+     of the South African "Computer Olympiad" in 2007 for high-school
+     students to solve. \cite{CodeReviewStackExchange:201602:KnightsDistance}
+     #+END_QUOTE
+
+     The computer olympiad entry in question is
+     \cite{Wiggins:2007:Knights}, where a variation of the problem is
+     presented:
+
+     #+BEGIN_QUOTE
+     The forest can be represented as a grid of blocks, labeled
+     by their (x, y) coordinates, with the greatest tree in the
+     forest in block (0, 0). The blocks are large enough for any
+     number of knights to share a block, and the forest extends
+     infinitely far in every direction. In order to avoid the many
+     dangers of the forest, the knights move in the same way
+     as knights in chess, as known in Figure 1. King Arthur
+     wants to know how many total moves are required for all
+     the knights to reach the tree.
+     #+END_QUOTE
+
+     The proposed solution is found at \cite{SACO:2007:KnightsSolution}:
+
+     #+BEGIN_QUOTE
+     To get 100%, a lot of scribbling on paper is required to make some key
+     observations and work out some formulae. The first thing to note is that the
+     grid is symetrical along the x, y axis and the lines y = ±x. You can therefore
+     convert all points (x, y) into an equivalent point such that the new 0 ≤ y ≤ x.
+
+     The magic formula is:
+
+     \begin{equation}
+     f(x, y) = \left\{
+       \begin{array}{ll}
+       2 \left\lfloor \frac{y - \delta}{3} \right\rfloor  + \delta & \mbox{if } y > \delta \\
+       \delta - 2 \left\lfloor \frac{\delta - y}{4} \right\rfloor & \mbox{otherwise}
+       \end{array}
+     \right.
+     \end{equation}
+     #+END_QUOTE
+
+     As one can see, apart from the formula, there is very little of
+     an explanation on this solution.
+
+
+     This problem is also known as knight metric:
+     \cite{deza2014encyclopedia}
+
+     #+NAME: knight-metric-description
+     #+BEGIN_QUOTE
+     The *knight metric* on \(\mathbb{Z}^2\) is the minimum number of moves a chess knight would
+     take to travel from x to y \(\in \mathbb{Z}^2\) ...
+
+     The distance between x and y is 3 if \((M,m) = (1,0)\), is 4
+     if \((M, m) = (2, 2)\) and is equal to
+
+     \begin{equation}
+
+       \max{\left(\lceil\frac{M}{2}\rceil, \lceil\frac{M+m}{3}\rceil\right)} +
+       (M+m) -
+       \left(\max{\left(\lceil\frac{M}{2}\rceil, \lceil\frac{M+m}{3}\rceil\right)}\pmod{2}\right)
+
+     where
+
+       M = \max \lbrace \abs \lvert u_1 \rvert, \abs \lvert u_2 \rvert \rbrace,
+       m = \min \lbrace \abs \lvert u_1 \rvert, \abs \lvert u_2 \rvert \rbrace,
+       u_1 = x_1 - y_1,
+       u_2 = x_2 - y_2
+     \end{equation}
+     #+END_QUOTE
+
+
+
+**** Implementations
+
+***** [[knight-metric-description][Knight Metric]]
+
+     #+CAPTION: Javascript knight metric
+     #+NAME: knight-metric-js
+     #+BEGIN_SRC javascript
+       function knight_metric(x_1, y_1, x_2, y_2){
+           var u_1 = (x_1 - y_1)
+           var u_2 = (x_2 - y_2)
+           var m = Math.min (Math.abs(u_1), Math.abs(u_2))
+           var M = Math.max (Math.abs(u_1), Math.abs(u_2))
+           if ((M===1) && (m===0)) {
+               return 3
+           } else if ((M===2) && (m===2)){
+               return 4
+           } else {
+               var max = Math.max(Math.ceil(M/2), Math.ceil((M+m)/3))
+               var rslt = max + (M + m) - (max%2)
+               return rslt
+           }
+       }
+     #+END_SRC
+
+     #+NAME: knight-metric-js-caller
+     #+BEGIN_SRC js :var x=1 y=1 :noweb yes :exports none
+           <<knight-metric-js>>
+           return knight_metric(0,0,x,y);
+     #+END_SRC
+
+
+     #+CAPTION: Knight metric test table
+     #+NAME: tbl:knight-metric
+     #+BEGIN_TABLE
+     #+LATEX: \makebox[\textwidth][c]{
+     #+ATTR_LATEX: :align |l|l|l|l|l|l|l|
+     | x | y | expected | js                  |
+     |---+---+----------+---------------------|
+     | 3 | 6 |        3 | expected 3, found 5 |
+     | 1 | 2 |        1 | expected 1, found 3 |
+     | 5 | 7 |        4 | expected 4, found 2 |
+     | 5 | 4 |        3 | pass                |
+     #+TBLFM: $4 = '(org-sbe "knight-metric-js-caller" (x $1) (y $2))::$4 ='(org-sbe "generic-tester" (expected $3) (result $4))
+     #+LATEX: }
+     #+END_TABLE
+
+    As one can see from [[tbl:knight-metric]], either the algorithm is
+    wrong or the implementations is.
+
+#
+
+# Bibliography
+\bibliographystyle{plainnat}
 \bibliography{./core}
