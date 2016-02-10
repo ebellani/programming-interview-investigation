@@ -425,6 +425,8 @@
 
      The proposed solution is found at \cite{SACO:2007:KnightsSolution}:
 
+
+     #+NAME: knight-distance-description
      #+BEGIN_QUOTE
      To get 100%, a lot of scribbling on paper is required to make some key
      observations and work out some formulae. The first thing to note is that the
@@ -477,6 +479,27 @@
 
 **** Implementations
 
+***** [[knight-distance-description][Knight Distance]]
+
+     #+CAPTION: Javascript knight distance
+     #+NAME: knight-distance-js
+     #+BEGIN_SRC js
+       function knight_distance(x, y)
+       {
+           delta = x - y;
+           if(y > delta )
+               return 2 * ((y - delta) / 3) + delta
+           else
+               return delta - 2 * ((delta - y) / 4)
+       }
+     #+END_SRC
+
+     #+NAME: knight-distance-js-caller
+     #+BEGIN_SRC js :var x=1 y=1 :noweb yes :exports none
+           <<knight-distance-js>>
+           return knight_distance(x,y);
+     #+END_SRC
+
 ***** [[knight-metric-description][Knight Metric]]
 
      #+CAPTION: Javascript knight metric
@@ -506,23 +529,27 @@
      #+END_SRC
 
 
+***** Test table
+
      #+CAPTION: Knight metric test table
      #+NAME: tbl:knight-metric
      #+BEGIN_TABLE
      #+LATEX: \makebox[\textwidth][c]{
      #+ATTR_LATEX: :align |l|l|l|l|l|l|l|
-     | x | y | expected | js                  |
-     |---+---+----------+---------------------|
-     | 3 | 6 |        3 | expected 3, found 5 |
-     | 1 | 2 |        1 | expected 1, found 3 |
-     | 5 | 7 |        4 | expected 4, found 2 |
-     | 5 | 4 |        3 | pass                |
-     #+TBLFM: $4 = '(org-sbe "knight-metric-js-caller" (x $1) (y $2))::$4 ='(org-sbe "generic-tester" (expected $3) (result $4))
+     | x | y | expected | js metric           | js distance                          |
+     |---+---+----------+---------------------+--------------------------------------|
+     | 3 | 6 |        3 | expected 3, found 5 | pass                                 |
+     | 1 | 2 |        1 | expected 1, found 3 | pass                                 |
+     | 5 | 7 |        4 | expected 4, found 2 | pass                                 |
+     | 2 | 2 |        4 | expected 4, found 0 | expected 4, found 1.3333333333333333 |
+     | 5 | 4 |        3 | pass                | pass                                 |
+     #+TBLFM: $4 = '(org-sbe "knight-metric-js-caller" (x $1) (y $2))::$4 = '(org-sbe "generic-tester" (expected $3) (result $4))::$5 = '(org-sbe "knight-distance-js-caller" (x $1) (y $2))::$5 = '(org-sbe "generic-tester" (expected $3) (result $5))
      #+LATEX: }
      #+END_TABLE
 
-    As one can see from [[tbl:knight-metric]], either the algorithm is
-    wrong or the implementations is.
+    As one can see from [[tbl:knight-metric]], both the [[knight-distance-description][Knight Distance]]
+    and the [[knight-metric-description][Knight Metric]] algorithms or their implementations are
+    wrong.
 
 #
 
