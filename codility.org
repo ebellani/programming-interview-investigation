@@ -1,0 +1,535 @@
+* Codility
+
+  Codility is a provider SAAS vendor of programming challenges. They
+  provide for free a battery of tests and a bunch of challenges at
+  [[https://codility.com][their site.]]
+
+** array investigation (Asymmetry)
+
+*** Description
+
+    An integer ~X~ and a non-empty zero-indexed array ~A~ consisting
+    of ~N~ integers are given. We are interested in which elements of
+    ~A~ are equal to X and which are different from ~X~. The goal is
+    to split array ~A~ into two parts, such that the number of
+    elements equal to ~X~ in the first part is the same as the number
+    of elements different from ~X~ in the other part. More formally,
+    we are looking for a number ~K~ such that:
+
+    ~0 < K < N~, and the number of elements equal to ~X~ in
+    ~A[0..K-1]~ is the same as the number of elements different from
+    ~X~ in ~A[K..N?1]~.(For ~K = 0, A[0..K-1]~ does not contain any
+    elements. For ~K = N, A[K..N-1]~ does not contain any elements.)
+    For example, given integer ~X = 5~ and array ~A~ such that:
+
+    #+BEGIN_SRC
+     A[0] = 5 A[1] = 5 A[2] = 1 A[3] = 7 A[4] = 2 A[5] = 3 A[6] = 5
+    #+END_SRC
+
+    K equals 4, because:
+
+    two of the elements of ~A[0..3]~ are equal to X, namely
+    ~A[0]=A[1]=X~, and two of the elements of ~A[4..6]~ are different
+    from X, namely ~A[4]~ and ~A[5]~.  Write a function:
+
+    ~int solution(int X, int A[], int N);~
+
+    that, given an integer X and a non-empty zero-indexed array A
+    consisting of N integers, returns the value of number K satisfying
+    the above conditions. It can be shown such index K always exists
+    and it is unique.
+
+    For example, given integer X and array A as above, the function
+    should return 4, as explained above.
+
+    Assume that:
+
+   - N is an integer within the range [1..100,000];
+   - X is an integer within the range [0..100,000];
+   - each element of array A is an integer within the range [0..100,000].
+
+   Complexity:
+
+   - expected worst-case time complexity is O(N);
+   - expected worst-case space complexity is O(1), beyond input
+     storage (not counting the storage required for input arguments).
+
+   Elements of input arrays can be modified.
+
+*** Design
+
+    First find all the number of elements that are different from the
+    anchor element and assign them to the right unequals counter.
+
+    Then iterate normally, the index being the moving division
+    between the two new arrays. While doing that, increment a counter
+    for each element equal to the anchor and decrement the right
+    unequals for each element that is unequal. This decrement is done
+    because this unequal element is now on the left array.
+
+    When the number of left equals is equal to the right unequals,
+    return the iteration index. If the iteration goes to the end
+    without that case being true, the initial array is not a
+    candidate for this algorithm.
+
+*** Implementations
+
+    #+macro: asymmetry-caption Asymmetry point finder, $1 solution
+
+    #+CAPTION: {{{asymmetry-caption(Python)}}} \cite{Komanec:201602:Codility:Gist}
+    #+NAME: src|python|asymmetry-solution
+    #+BEGIN_SRC python
+      def solution(anchor, list_of_elements):
+              n = len(list_of_elements)
+              right = sum(1 for item in list_of_elements if item != anchor)
+              left = 0
+              for k, element in enumerate(list_of_elements, start=1):
+                      if element == anchor:
+                              left += 1
+                      else:
+                              right -= 1
+                      if right and left == right:
+                              return k
+              return -1
+    #+END_SRC
+
+
+    #+CAPTION: {{{asymmetry-caption(Javascript)}}}
+    #+NAME: src|js|asymmetry-solution
+    #+BEGIN_SRC js
+      function solution(anchor, list_of_elements) {
+          var l            = list_of_elements.length
+          var left_hits    = 0
+          var right_misses = 0
+          for(i=0; i<l;i++){
+              if(list_of_elements[i]!==anchor){
+                  right_misses++
+              }
+          }
+          for(i = 1; i < l; i++) {
+              if(list_of_elements[i]===anchor){
+                  left_hits++
+              } else {
+                  right_misses--
+              }
+              if (right_misses===left_hits){
+                  return i
+              }
+          }
+          return -1
+      }
+    #+END_SRC
+
+    #+NAME: src|js|asymmetry-solution-caller
+    #+BEGIN_SRC js :var element=1 :var elist='() :noweb yes :exports none
+      <<src|js|asymmetry-solution>>
+      return solution(element, elist);
+    #+END_SRC
+
+    #+NAME: src|python|asymmetry-solution-caller
+    #+BEGIN_SRC python :var element=1 :var elist='() :noweb yes :exports none
+      <<src|python|asymmetry-solution>>
+      return solution(element, elist)
+    #+END_SRC
+
+    #+CAPTION: Test table (list of elements represented in elisp)
+    #+BEGIN_TABLE
+    #+LATEX: \makebox[\textwidth][c]{
+    #+ATTR_LATEX: :align |l|l|l|l|l|l|l|
+    | el | list of elements                                 | expected | python |    js |
+    |----+--------------------------------------------------+----------+--------+-------|
+    |  5 | '(5 5 1 7 2 3 5)                                 |        4 |      4 |     4 |
+    |  1 | '()                                              |       -1 |     -1 |    -1 |
+    |  1 | (make-list 20 0)                                 |       -1 |     -1 |    -1 |
+    |  1 | '(1 1 1 1 1 1 1 1 1 2)                           |        1 |      1 |     1 |
+    |  1 | (append (make-list 50 1) (make-list 50 0))       |       50 |     50 |    50 |
+    |  1 | (append (make-list 50000 1) (make-list 50000 0)) |    50000 |  50000 | 50000 |
+    #+TBLFM: $4='(org-sbe "src|python|asymmetry-solution-caller" (element $1) (elist $2))::$5='(org-sbe "src|js|asymmetry-solution-caller" (element $1) (elist $2))
+    #+LATEX: }
+    #+END_TABLE
+
+** Negabinary (sequence manipulation)
+
+   In base -2, integers are represented by sequences of bits in the
+   following way. Bits are ordered from the least to the most
+   significant. Sequence B of N bits represents the number:
+   ~sum{B[i]*(2)i for i = 0..N-1 }~. The empty sequence represents 0.
+
+   Note that such a representation is suitable for both positive and
+   negative integers.
+
+   Assume that the following declarations are given:
+
+   #+BEGIN_SRC c
+     struct Results { int * B; int N; };
+   #+END_SRC
+
+   Write a function:
+   #+BEGIN_SRC
+     struct Results solution(int A[], int M);
+   #+END_SRC
+
+   that, given a zero-indexed array A of M bits, containing a sequence
+   representing some integer X, returns the shortest sequence of bits
+   representing -X.
+
+   The sequence should be returned as:
+
+   - a structure Results (in C), or
+   - a vector of integers (in C++), or
+   - a record Results (in Pascal), or
+   - an array of integers (in any other programming language).
+
+   For example, given A = [1,0,0,1,1] (X = 9), the function should
+   return [1,1,0,1] (-X = -9).  Given A = [1,0,0,1,1,1] (X = -23), the
+   function should return [1,1,0,1,0,1,1] (-X = 23).
+
+   Assume that:
+
+   - M is an integer within the range [0..100,000];
+   - each element of array A is an integer that can have one of the
+     following values: 0, 1.
+
+   Complexity:
+    - expected worst-case time complexity is O(M);
+    - expected worst-case space complexity is O(M), beyond input
+      storage (not counting the storage required for input arguments).
+    Elements of input arrays can be modified.
+
+
+*** Design
+
+    One note, the codility header apparently gets the order of the
+    input arrays inversed. For example, 9 in base -2 is
+    ~[ 1, 1, 0, 0, 1 ]~ *not* ~[ 1, 0, 0, 1, 1 ]~. \cite{wiki:Negative_base}
+
+    1. convert the number to decimal by using the regular [[http://mathworld.wolfram.com/Base.html][positional
+       exponential]] algorithm, negate that by multiplying by -1 and
+       then converting it back by:
+       #+BEGIN_QUOTE
+       The negabinary expansion of a number can be found by repeated division
+       by -2, recording the remainders of 0 or 1, and concatenating those
+       remainders, starting with the last. Note that if a / b = c, remainder
+       d, then bc + d = a. For example:
+
+       13 / -2 = -6, remainder 1
+
+       -6 / -2 =  3, remainder 0
+
+       3 / -2 = -1, remainder 1
+
+       -1 / -2 =  1, remainder 1
+
+       1 / -2 =  0, remainder 1
+
+       Therefore, the negabinary expansion of 13 is 11101. \cite{FactIndex:201602:Negabinary}
+       #+END_QUOTE
+
+       One must keep in mind, while doing this process, that
+
+       #+BEGIN_QUOTE
+       in most programming languages, the result (in integer
+       arithmetic) of dividing a negative number by a negative number
+       is rounded towards 0, usually leaving a negative
+       remainder. Therefore, to get the correct result in such case,
+       computer implementations of the above algorithm should add 1
+       and r to the quotient and remainder respectively. see
+       \cite{wiki:Negative_base}
+       #+END_QUOTE
+
+    2. There are some tricks, such as using the reverse algorithm
+       found in [[https://www.youtube.com/watch?v%3DtdBejVYuoyk][this lecture]] or the Schroeppel algorithm
+       \cite{wiki:Negative_base}. These won't be explored for now, as
+       they require *even more* specific knowledge than this test
+       already does.
+
+*** Implementations
+
+    #+MACRO: negabinary-caption Negabinary Solution, $1 solution
+    #+CAPTION: {{{negabinary-caption(Python)}}} \cite{Komanec:201602:Codility:Gist}
+    #+NAME: src|python|negabinary-solution
+    #+BEGIN_SRC python
+      def to_binary(n):
+              if n == -1:
+                      return [1]
+              else:
+                      return [-1*(n%-2)] + to_binary(n/-2)
+
+      def solution(A):
+              num = sum(bit*(-2)**i for i, bit in enumerate(A) if bit != 0)
+              return to_binary(num)
+    #+END_SRC
+
+    #+NAME: src|js|to-decimal
+    #+BEGIN_SRC js :exports none
+      function toDecimalRepresentation(num_array, base){
+          var decimal_representation =0
+          var current_digit          =0
+          var len                    = num_array.length
+          for (var i=0; i < len;i++){
+              current_digit=num_array[i];
+              if(current_digit!==0){
+                  decimal_representation+=(current_digit*(Math.pow(base, (len-(i+1)))))
+              }
+          }
+          return decimal_representation;
+      }
+    #+END_SRC
+
+    #+NAME: src|js|to-decimal-caller
+    #+BEGIN_SRC js :var numarray='() base=1 :noweb yes :exports none
+      <<src|js|to-decimal>>
+      return toDecimalRepresentation(numarray, base);
+    #+END_SRC
+
+    #+BEGIN_COMMENT
+    #+CAPTION: Decimal JS test table
+    | num          | base | expected | js |
+    |--------------+------+----------+----|
+    | '(1 0 1 0)   |    2 |       10 | 10 |
+    | '(1 0 1)     |    3 |       10 | 10 |
+    | '(2 2)       |    4 |       10 | 10 |
+    | '(1 1)       |    9 |       10 | 10 |
+    | '(1 1 1 1)   |   -2 |       -5 | -5 |
+    | '(1 1 0 1 0) |   -2 |        6 |  6 |
+    #+TBLFM: $4='(org-sbe "src|js|to-decimal-caller" (numarray $1) (base $2))
+    #+END_COMMENT
+
+    #
+    #+NAME: src|js|negabinary-solution
+    #+BEGIN_SRC js :noweb yes
+      <<src|js|to-decimal>>
+
+      Math.trunc = Math.trunc || function(x) {
+          return x < 0 ? Math.ceil(x) : Math.floor(x);
+      }
+
+      function toNegaBase(number, base){
+          var nega_num_array = []
+          var current_num    = number
+          var remainder      = 0
+          while (current_num !== 0){
+              var remainder = current_num % base
+              current_num = Math.trunc((current_num / base))
+              if (remainder < 0) {
+                  current_num+=1
+                  remainder+= Math.abs(base)
+              }
+              nega_num_array=[remainder].concat(nega_num_array)
+          }
+          return nega_num_array;
+      }
+    #+END_SRC
+
+    #+CAPTION: {{{negabinary-caption(Javascript)}}}
+    #+NAME: src|js|negabinary-solution-caller
+    #+BEGIN_SRC js :var binary='() :noweb yes
+          <<src|js|negabinary-solution>>
+          return toNegaBase((-1*toDecimalRepresentation(binary.reverse(), -2)),
+                            -2).reverse()
+    #+END_SRC
+
+    #+NAME: src|python|negabinary-solution-caller
+    #+BEGIN_SRC python :var binary='() :noweb yes :exports none
+      <<src|python|negabinary-solution>>
+      return solution(binary)
+    #+END_SRC
+
+    #+BEGIN_COMMENT
+    #+CAPTION: Negabinary test table
+    #+BEGIN_TABLE
+    #+LATEX: \makebox[\textwidth][c]{
+    #+ATTR_LATEX: :align |l|l|l|l|l|l|l|
+    | binary         | expected         | python          | js              |
+    |----------------+------------------+-----------------+-----------------|
+    | '(1 0 0 1 1)   | '(1 1 0 1)       | (1 1 0 1)       | (1 1 0 1)       |
+    | '(1 0 0 1 1 1) | '(1 1 0 1 0 1 1) | (1 1 0 1 0 1 1) | (1 1 0 1 0 1 1) |
+    #+TBLFM: $3='(org-sbe "src|python|negabinary-solution-caller" (binary $1))::$4='(org-sbe "src|js|negabinary-solution-caller" (binary $1))
+    #+LATEX: }
+    #+END_TABLE
+    #+END_COMMENT
+
+** Knight's distance
+
+   The knight is a piece in the game of chess that in one turn can move
+   two squares horizontally and one square vertically or two squares
+   vertically and one square horizontally.
+
+   An infinite chessboard is given. All of its squares are empty except
+   for the square with coordinates (0, 0) where a knight stands.
+
+   Write a function: int solution(A,B)
+
+   that given two numbers A and B returns the minimal number of turns
+   required for the knight to move from square (0, 0) to square (A,
+   B). The function should return -1 if the knight cannot reach given
+   square. The function should return −2 if the required number of turns
+   exceeds 100,000,000.
+
+   Assume that: A is an integer within the range
+     - [-100,000,000..100,000,000]; B is an integer within the range
+     - [-100,000,000..100,000,000].
+
+   For example, given A = 4 and B = 5 the function should return 3
+   because the knight requires 3 turns to move from square (0, 0) to
+   square (4, 5): in the first turn the knight moves from square (0, 0)
+   to square (2, 1), in the second turn the knight moves from square
+   (2, 1) to square (3, 3), in the third turn the knight moves from
+   square (3, 3) to square (4, 5).
+
+   Complexity:
+     - expected worst-case time complexity is O(1);
+     - expected worst-case space complexity is O(1).
+
+*** Design
+
+    The main thing about this problem is the expected time complexity
+    of O(1). This informs the reader that there is a structural
+    relationship that can be exploited in the form of a formula. So
+    the solver must dig deeper than the usual regular search methods
+    (BFS and DFS).
+
+    #+BEGIN_QUOTE
+    This problem is called the "Knight's distance" ... was posed as part
+    of the South African "Computer Olympiad" in 2007 for high-school
+    students to solve. \cite{CodeReviewStackExchange:201602:KnightsDistance}
+    #+END_QUOTE
+
+    The computer olympiad entry in question is
+    \cite{Wiggins:2007:Knights}, where a variation of the problem is
+    presented:
+
+    #+BEGIN_QUOTE
+    The forest can be represented as a grid of blocks, labeled
+    by their (x, y) coordinates, with the greatest tree in the
+    forest in block (0, 0). The blocks are large enough for any
+    number of knights to share a block, and the forest extends
+    infinitely far in every direction. In order to avoid the many
+    dangers of the forest, the knights move in the same way
+    as knights in chess, as known in Figure 1. King Arthur
+    wants to know how many total moves are required for all
+    the knights to reach the tree.
+    #+END_QUOTE
+
+    The proposed solution is found at \cite{SACO:2007:KnightsSolution}:
+
+
+    #+NAME: knight-distance-description
+    #+BEGIN_QUOTE
+    To get 100%, a lot of scribbling on paper is required to make some key
+    observations and work out some formulae. The first thing to note is that the
+    grid is symetrical along the x, y axis and the lines y = ±x. You can therefore
+    convert all points (x, y) into an equivalent point such that the new 0 ≤ y ≤ x.
+
+    The magic formula is:
+
+    \begin{equation}
+    f(x, y) = \left\{
+      \begin{array}{ll}
+      2 \left\lfloor \frac{y - \delta}{3} \right\rfloor  + \delta & \mbox{if } y > \delta \\
+      \delta - 2 \left\lfloor \frac{\delta - y}{4} \right\rfloor & \mbox{otherwise}
+      \end{array}
+    \right.
+    \end{equation}
+    #+END_QUOTE
+
+    As one can see, apart from the formula, there is very little of
+    an explanation on this solution.
+
+
+    This problem is also known as knight metric:
+    \cite{deza2014encyclopedia}
+
+    #+NAME: knight-metric-description
+    #+BEGIN_QUOTE
+    The *knight metric* on \(\mathbb{Z}^2\) is the minimum number of moves a chess knight would
+    take to travel from x to y \(\in \mathbb{Z}^2\) ...
+
+    The distance between x and y is 3 if \((M,m) = (1,0)\), is 4
+    if \((M, m) = (2, 2)\) and is equal to
+
+    \begin{equation}
+
+      \max{\left(\lceil\frac{M}{2}\rceil, \lceil\frac{M+m}{3}\rceil\right)} +
+      (M+m) -
+      \left(\max{\left(\lceil\frac{M}{2}\rceil, \lceil\frac{M+m}{3}\rceil\right)}\pmod{2}\right)
+
+    where
+
+      M = \max \lbrace \abs \lvert u_1 \rvert, \abs \lvert u_2 \rvert \rbrace,
+      m = \min \lbrace \abs \lvert u_1 \rvert, \abs \lvert u_2 \rvert \rbrace,
+      u_1 = x_1 - y_1,
+      u_2 = x_2 - y_2
+    \end{equation}
+    #+END_QUOTE
+
+*** Implementations
+
+**** [[knight-distance-description][Knight Distance]]
+
+    #+CAPTION: Javascript knight distance, JS version
+    #+NAME: src|js|knight-distance
+    #+BEGIN_SRC js
+      function knight_distance(x, y)
+      {
+          delta = x - y;
+          if(y > delta )
+              return 2 * ((y - delta) / 3) + delta
+          else
+              return delta - 2 * ((delta - y) / 4)
+      }
+    #+END_SRC
+
+    #+NAME: src|js|knight-distance-caller
+    #+BEGIN_SRC js :var x=1 y=1 :noweb yes :exports none
+          <<src|js|knight-distance>>
+          return knight_distance(x,y);
+    #+END_SRC
+
+**** [[knight-metric-description][Knight Metric]]
+
+    #+CAPTION: Javascript knight metric, JS version
+    #+NAME: src|js|knight-metric
+    #+BEGIN_SRC javascript
+      function knight_metric(x_1, y_1, x_2, y_2){
+          var u_1 = (x_1 - y_1)
+          var u_2 = (x_2 - y_2)
+          var m = Math.min (Math.abs(u_1), Math.abs(u_2))
+          var M = Math.max (Math.abs(u_1), Math.abs(u_2))
+          if ((M===1) && (m===0)) {
+              return 3
+          } else if ((M===2) && (m===2)){
+              return 4
+          } else {
+              var max = Math.max(Math.ceil(M/2), Math.ceil((M+m)/3))
+              var rslt = max + (M + m) - (max%2)
+              return rslt
+          }
+      }
+    #+END_SRC
+
+    #+NAME: src|js|knight-metric-caller
+    #+BEGIN_SRC js :var x=1 y=1 :noweb yes :exports none
+          <<src|js|knight-metric>>
+          return knight_metric(0,0,x,y);
+    #+END_SRC
+
+    #+CAPTION: Knight metric test table
+    #+NAME: tbl:knight-metric
+    #+BEGIN_TABLE
+    #+LATEX: \makebox[\textwidth][c]{
+    #+ATTR_LATEX: :align |l|l|l|l|l|l|l|
+    | x | y | expected | js metric |        js distance |
+    |---+---+----------+-----------+--------------------|
+    | 3 | 6 |        3 |         5 |                  3 |
+    | 1 | 2 |        1 |         3 |                  1 |
+    | 5 | 7 |        4 |         2 |                  4 |
+    | 2 | 2 |        4 |         0 | 1.3333333333333333 |
+    | 5 | 4 |        3 |         3 |                  3 |
+    #+TBLFM: $4='(org-sbe "src|js|knight-metric-caller" (x $1) (y $2))::$5='(org-sbe "src|js|knight-distance-caller" (x $1) (y $2))
+    #+LATEX: }
+    #+END_TABLE
+
+   As one can see from [[tbl:knight-metric]], both the [[knight-distance-description][Knight Distance]]
+   and the [[knight-metric-description][Knight Metric]] algorithms or their implementations are
+   wrong.

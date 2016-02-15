@@ -1,0 +1,145 @@
+* Programming interviews exposed
+
+  It is a book \cite{mongan07} geared towards the introductory parts
+  of a software interview. It is considered by many commenters
+
+** Cyclic list detection
+
+Write a function that takes a pointer to the head of a list and
+determines whether the list is cyclic or acyclic. Your function should
+return false if the list is acyclic and true if it is cyclic. You may
+not modify the list in any way.
+
+*** Design
+
+#+BEGIN_QUOTE
+What can you do with two pointers that you couldn’t do with one? You
+can advance them on top of each other, but then you might as well have
+one pointer. You could advance them with a fixed interval between
+them, but this doesn’t seem to gain anything. What happens if you
+advance the pointers at different speeds?
+
+In the acyclic list, the faster pointer will reach the end. In the
+cyclic list, they will both loop endlessly. The faster pointer will
+eventually catch up with and pass the slower pointer. If the fast
+pointer ever passes the slower pointer, you have a cyclic list. If it
+encounters a NULL pointer, you have an acyclic list. \cite{mongan07}
+#+END_QUOTE
+
+The point of this problem, as most of the linked list problems
+everywhere, is to check the candidate's skills with pointers.
+
+The reason this is here is to illustrate how *adding* a new element
+sometimes subtracts from the complexity of the solution. As an
+addendum, the code in the book is bugged. A fixed version is found
+below at [[src:cyclic-list-C]].
+
+*** Solution
+
+     #+CAPTION: Cyclic list detection, C version
+     #+NAME: src|c|cyclic-list
+     #+BEGIN_SRC C
+       typedef struct Node {
+         struct Node *next;
+         int value;
+       } Node;
+
+       /* Takes a pointer to the head of a linked list and determines if
+        ,* the list ends in a cycle or is NULL terminated
+        ,*/
+       bool determineTermination( Node *head ){
+         Node *fast, *slow;
+         fast = slow = head;
+         while( true ){
+           if( !fast || !fast->next ){
+             return false;
+           }
+           slow = slow->next;
+           fast = fast->next->next;
+           if( fast == slow || fast->next == slow ){
+             return true;
+           }
+         }
+       }
+     #+END_SRC
+
+     #+NAME: src|c|cyclic-list-test
+     #+BEGIN_SRC C :noweb yes :includes '(<stdbool.h> <stdio.h> <stdlib.h>) :exports none
+       <<src|c|cyclic-list>>
+
+       Node *head    = (Node*)malloc(sizeof(Node));
+       Node *middle  = (Node*)malloc(sizeof(Node));
+       Node *last    = (Node*)malloc(sizeof(Node));
+       head->value   = 1;
+       head->next    = middle;
+       middle->value = 3;
+       middle->next  = last;
+       last->value   = 5;
+       last->next    = head;
+       printf("%d\n", determineTermination(head));
+     #+END_SRC
+
+     #+NAME: src|c|acyclic-list-test
+     #+BEGIN_SRC C :noweb yes :includes '(<stdbool.h> <stdio.h> <stdlib.h>) :exports none
+       <<src|c|cyclic-list>>
+
+       Node *head    = (Node*)malloc(sizeof(Node));
+       Node *middle  = (Node*)malloc(sizeof(Node));
+       Node *last    = (Node*)malloc(sizeof(Node));
+       head->value   = 1;
+       head->next    = middle;
+       middle->value = 3;
+       middle->next  = last;
+       last->value   = 5;
+       last->next    = NULL;
+       printf("%d\n", determineTermination(head));
+     #+END_SRC
+
+     #+CAPTION: Cyclic List Detection Test Table
+     #+NAME: tbl:cyclic-list-test-table
+     #+ATTR_LATEX: :align |l|l|l|
+     | input   | expected | result |
+     |---------+----------+--------|
+     | cyclic  |        1 |      1 |
+     | acyclic |        0 |      0 |
+     #+TBLFM: @2$3='(org-sbe "src|c|cyclic-list-test")::@3$3='(org-sbe "src|c|acyclic-list-test")
+
+** Trees (Preorder Traversal)
+
+   One interesting bit extracted from the book pertains equivocations:
+
+   #+BEGIN_QUOTE
+   People often say /tree/ when they mean /binary search tree/. \cite{mongan07}
+   #+END_QUOTE
+
+   So, a general note could be: always try to understand the
+   definitions used, if any.
+
+*** Design
+
+   Trees spells recursion, specially when dealing with traversal.
+
+*** Implementation
+
+    #+name: src|racket|reorder-traversal
+    #+BEGIN_SRC racket
+      #lang racket
+
+      (define (reorder-traversal tree)
+        (match tree
+          [(list head (list) (list)) (list head)]
+          [(list head left (list))  (cons head (reorder-traversal left))]
+          [(list head (list) right) (cons head (reorder-traversal right))]
+          [(list head left right)   (cons head
+                                          (append (reorder-traversal left)
+                                                  (reorder-traversal right)))]
+          [_ tree]))
+    #+END_SRC
+
+    #+BEGIN_COMMENT
+    #+CAPTION: Cyclic List Detection Test Table
+    #+NAME: tbl:cyclic-list-test-table
+    | tree                                                                    | expected                        | result                         |
+    |-------------------------------------------------------------------------+---------------------------------+--------------------------------|
+    | '(100 (5 (25 () ()) (75 () ())) (150 (125 (110 () ()) ()) (175 () ()))) | '(100 5 25 75 150 125 110  175) | '(100 5 25 75 150 125 110 175) |
+    #+END_COMMENT
