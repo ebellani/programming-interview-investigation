@@ -121,25 +121,49 @@ below at [[src:cyclic-list-C]].
 
 *** Implementation
 
-    #+name: src|racket|reorder-traversal
-    #+BEGIN_SRC racket
-      #lang racket
+    #+CAPTION: Reorder Traversal, OCaml version (including test)
+    #+NAME: src|ocaml|reorder-traversal
+    #+BEGIN_SRC ocaml
+      type 'a binary_tree =
+          | Empty
+          | Node of 'a * 'a binary_tree * 'a binary_tree
 
-      (define (reorder-traversal tree)
-        (match tree
-          [(list head (list) (list)) (list head)]
-          [(list head left (list))  (cons head (reorder-traversal left))]
-          [(list head (list) right) (cons head (reorder-traversal right))]
-          [(list head left right)   (cons head
-                                          (append (reorder-traversal left)
-                                                  (reorder-traversal right)))]
-          [_ tree]))
+      let rec reorder_traversal tree =
+        match tree with
+        | Node(head, Empty, Empty) -> [head]
+        | Node(head, left, Empty)  -> head::(reorder_traversal left)
+        | Node(head, Empty, right) -> head::(reorder_traversal right)
+        | Node(head, left, right)  -> head::(List.append
+                                               (reorder_traversal left)
+                                               (reorder_traversal right))
+        | Empty                    -> []
+
+      let example_tree =
+        Node(100,
+             Node(50,
+                  Node(25, Empty, Empty),
+                  Node(75, Empty, Empty)),
+             Node(150,
+                  Empty,
+                  Node(125,
+                       Node(110, Empty, Empty),
+                       Node(175, Empty, Empty))))
+
     #+END_SRC
 
-    #+BEGIN_COMMENT
-    #+CAPTION: Cyclic List Detection Test Table
-    #+NAME: tbl:cyclic-list-test-table
-    | tree                                                                    | expected                        | result                         |
-    |-------------------------------------------------------------------------+---------------------------------+--------------------------------|
-    | '(100 (5 (25 () ()) (75 () ())) (150 (125 (110 () ()) ()) (175 () ()))) | '(100 5 25 75 150 125 110  175) | '(100 5 25 75 150 125 110 175) |
-    #+END_COMMENT
+    #+NAME: src|ocaml|reorder-traversal-caller
+    #+BEGIN_SRC ocaml :noweb yes :exports none
+      <<src|ocaml|reorder-traversal>>;;
+      reorder_traversal example_tree;;
+    #+END_SRC
+
+    #+CAPTION: Reorder Traversal (Ocaml typed expressions)
+    #+BEGIN_TABLE
+    #+LATEX: \makebox[\textwidth][c]{
+    #+ATTR_LATEX: :align |l|l|l|l|l|l|l|
+    | expected                                             | result                                               |
+    |------------------------------------------------------+------------------------------------------------------|
+    | - : int list = [100; 50; 25; 75; 150; 125; 110; 175] | - : int list = [100; 50; 25; 75; 150; 125; 110; 175] |
+    #+TBLFM: @2$2='(org-sbe "src|ocaml|reorder-traversal-caller")
+    #+LATEX: }
+    #+END_TABLE
